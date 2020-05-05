@@ -26,8 +26,8 @@ def is_python(fn):
         return True
     else:
         try:
-            file_head = open(fn).read(64)
-            if re.match("#!.*\\bpython", file_head):
+            file_head = open(fn, 'rb').read(64)
+            if re.match(b"#!.*\\bpython", file_head):
                 return True
         except IOError:
             return False

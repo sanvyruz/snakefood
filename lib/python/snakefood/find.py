@@ -10,20 +10,23 @@ from __future__ import absolute_import
 # See http://furius.ca/snakefood/ for licensing details.
 
 from builtins import open
+
 from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 from builtins import range
 from builtins import object
 import sys, os, logging
-import compiler
-from compiler.visitor import ASTVisitor
-from compiler.ast import Discard, Const, AssName, List, Tuple
-from compiler.consts import OP_ASSIGN
+import ast as ast3
+from ast import NodeVisitor
+from ast import Expr, Constant, Name, List, Tuple, alias, iter_child_nodes
 from os.path import *
 
 from snakefood.roots import find_package_root
 from snakefood.local import filter_unused_imports
+
+
+OP_ASSIGN = 'OP_ASSIGN'
 
 __all__ = ('find_dependencies', 'find_imports',
            'parse_python_source',
@@ -36,6 +39,7 @@ ERROR_SYMBOL = "    Line %d: Symbol is not a module: '%s'"
 ERROR_UNUSED = "    Line %d: Ignored unused import: '%s'"
 ERROR_SOURCE = "       %s"
 WARNING_OPTIONAL = "    Line %d: Pragma suppressing import '%s'"
+
 
 def find_dependencies(fn, verbose, process_pragmas,
                       ignore_unused=False,
@@ -50,7 +54,6 @@ def find_dependencies(fn, verbose, process_pragmas,
     found_imports = get_ast_imports(ast)
     if found_imports is None:
         return [], file_errors
-
     # Filter out the unused imports if requested.
     if ignore_unused:
         found_imports, unused_imports = filter_unused_imports(ast, found_imports)
@@ -137,7 +140,7 @@ def find_imports(fn, verbose, ignores):
         yield (modname, lineno, islocal)
 
 
-class ImportVisitor(object):
+class ImportVisitor(NodeVisitor):
     """AST visitor for grabbing the import statements.
 
     This visitor produces a list of
@@ -151,17 +154,28 @@ class ImportVisitor(object):
         self.modules = []
         self.recent = []
 
-    def visitImport(self, node):
+    def visit_Module(self, node):
         self.accept_imports()
-        self.recent.extend((x[0], None, x[1] or x[0], node.lineno, 0)
-                           for x in node.names)
+        for nd in node.body:
+            self.visit(nd)
 
-    def visitFrom(self, node):
+    def visit_Import(self, node):
         self.accept_imports()
-        modname = node.modname
+        for name in node.names:
+            if isinstance(name, alias):
+                as_ = name.asname
+                name = name.name
+            self.recent.append((name, None, as_ or name, node.lineno, 0))
+
+    def visit_ImportFrom(self, node):
+        self.accept_imports()
+        modname = node.module
         if modname == '__future__':
             return # Ignore these.
-        for name, as_ in node.names:
+        for name in node.names:
+            if isinstance(name, alias):
+                as_ = name.asname
+                name = name.name
             if name == '*':
                 # We really don't know...
                 mod = (modname, None, None, node.lineno, node.level)
@@ -180,28 +194,24 @@ class ImportVisitor(object):
     #  when a new version of the package is released. Package authors may also
     #  decide not to support it, if they don't see a use for importing * from
     #  their package.
-    def visitAssign(self, node):
-        lhs = node.nodes
-        if (len(lhs) == 1 and
-            isinstance(lhs[0], AssName) and
-            lhs[0].name == '__all__' and
-            lhs[0].flags == OP_ASSIGN):
-
-            rhs = node.expr
+    def visit_Assign(self, node):
+        lhs = node.targets
+        if len(lhs) == 1 and isinstance(lhs[0], Name) and lhs[0].id == '__all__':
+            rhs = node.value
             if isinstance(rhs, (List, Tuple)):
                 for namenode in rhs:
                     # Note: maybe we should handle the case of non-consts.
-                    if isinstance(namenode, Const):
+                    if isinstance(namenode, Constant):
                         modname = namenode.value
-                        mod = (modname, None, modname, node.lineno, 0)#node.level
+                        mod = (modname, None, modname, node.lineno, 0) #node.level
                         self.recent.append(mod)
 
-    def default(self, node):
+    def generic_visit(self, node):
         pragma = None
         if self.recent:
-            if isinstance(node, Discard):
-                children = node.getChildren()
-                if len(children) == 1 and isinstance(children[0], Const):
+            if isinstance(node, Expr):
+                children = iter_child_nodes(node)  # TODO: Test this!
+                if len(children) == 1 and isinstance(children[0], Constant):
                     const_node = children[0]
                     pragma = const_node.value
 
@@ -248,16 +258,16 @@ def get_local_names(found_imports):
             if lname is not None]
 
 
-class ImportWalker(ASTVisitor):
+class ImportWalker(NodeVisitor):
     "AST walker that we use to dispatch to a default method on the visitor."
 
     def __init__(self, visitor):
-        ASTVisitor.__init__(self)
+        NodeVisitor.__init__(self)
         self._visitor = visitor
 
-    def default(self, node, *args):
-        self._visitor.default(node)
-        ASTVisitor.default(self, node, *args)
+    def generic_visit(self, node, *args):
+        self._visitor.generic_visit(node)
+        NodeVisitor.generic_visit(self, node, *args)
 
 
 def parse_python_source(fn):
@@ -280,7 +290,7 @@ def parse_python_source(fn):
 
     # Convert the file to an AST.
     try:
-        ast = compiler.parse(contents)
+        ast = ast3.parse(contents)
     except SyntaxError as e:
         err = '%s:%s: %s' % (fn, e.lineno or '--', e.msg)
         logging.error("Error processing file '%s':\n%s" %
@@ -303,7 +313,7 @@ def get_ast_imports(ast):
     """
     assert ast is not None
     vis = ImportVisitor()
-    compiler.walk(ast, vis, ImportWalker(vis))
+    vis.visit(ast)
     found_imports = vis.finalize()
     return found_imports
 

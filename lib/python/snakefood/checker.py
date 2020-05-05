@@ -22,7 +22,7 @@ from future import standard_library
 standard_library.install_aliases()
 import sys, builtins, re
 from os.path import *
-import compiler
+import ast as ast3
 
 from six import print_
 
@@ -93,7 +93,7 @@ def main():
         # (Optionally) Compute the list of names that are being assigned to.
         if opts.do_missing or opts.debug:
             vis = AssignVisitor()
-            compiler.walk(ast, vis)
+            ast3.walk(vis)
             assign_names = vis.finalize()
 
         # (Optionally) Check for potentially missing imports (this cannot be

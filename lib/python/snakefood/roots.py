@@ -13,12 +13,11 @@ standard_library.install_aliases()
 from builtins import map
 import os, logging
 from os.path import *
-from dircache import listdir
+from snakefood.dircache import listdir
 
 from snakefood.util import is_python, filter_separate
 
 __all__ = ('find_roots', 'find_package_root', 'relfile',)
-
 
 
 def find_roots(list_dirofn, ignores):

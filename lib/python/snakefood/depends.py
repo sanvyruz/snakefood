@@ -30,7 +30,7 @@ def output_depends(depdict):
     write = sys.stdout.write
     for (from_root, from_), targets in sorted(iter(depdict.items()),
                                              key=itemgetter(0)):
-        for to_root, to_ in sorted(targets):
+        for to_root, to_ in sorted(targets, key=lambda x: str(x)):
             write(repr( ((from_root, from_), (to_root, to_)) ))
             write('\n')
 

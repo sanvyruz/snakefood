@@ -15,7 +15,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import range
 from builtins import object
-import compiler
+from ast import NodeVisitor, Expr, iter_child_nodes
 
 __all__ = ('get_names_from_ast', 'filter_unused_imports',
            'NamesVisitor', 'AssignVisitor', 'AllVisitor')
@@ -24,7 +24,7 @@ __all__ = ('get_names_from_ast', 'filter_unused_imports',
 def get_names_from_ast(ast):
     "Find all the names being referenced/used."
     vis = NamesVisitor()
-    compiler.walk(ast, vis)
+    vis.visit(ast)
     dotted_names, simple_names = vis.finalize()
     return (dotted_names, simple_names)
 
@@ -42,7 +42,7 @@ def filter_unused_imports(ast, found_imports):
 
     # Find all the names being exported via __all__.
     vis = AllVisitor()
-    compiler.walk(ast, vis)
+    vis.visit(ast)
     exported = vis.finalize()
 
     # Check that all imports have been referenced at least once.
@@ -59,10 +59,10 @@ def filter_unused_imports(ast, found_imports):
     return used_imports, unused_imports
 
 
-class Visitor(object):
+class Visitor(NodeVisitor):
     "Base class for our visitors."
     def continue_(self, node):
-        for child in node.getChildNodes():
+        for child in iter_child_nodes(node):
             self.visit(child)
 
 
@@ -76,8 +76,8 @@ class NamesVisitor(Visitor):
         self.simple = []
         self.attributes = []
 
-    def visitName(self, node):
-        self.attributes.append(node.name)
+    def visit_Name(self, node):
+        self.attributes.append(node.id)
         self.attributes.reverse()
         attribs = self.attributes
         for i in range(1, len(attribs)+1):
@@ -85,8 +85,8 @@ class NamesVisitor(Visitor):
         self.simple.append((attribs[0], node.lineno))
         self.attributes = []
 
-    def visitGetattr(self, node):
-        self.attributes.append(node.attrname)
+    def visit_Attribute(self, node):
+        self.attributes.append(node.attr)
         self.continue_(node)
 
     def finalize(self):
@@ -102,17 +102,17 @@ class AssignVisitor(Visitor):
         self.assnames = []
         self.in_class = False
 
-    def visitAssName(self, node):
+    def visit_Name(self, node):
         self.assnames.append((node.name, node.lineno))
         self.continue_(node)
 
-    def visitClass(self, node):
+    def visit_Class(self, node):
         self.assnames.append((node.name, node.lineno))
         prev, self.in_class = self.in_class, True
         self.continue_(node)
         self.in_class = prev
 
-    def visitFunction(self, node):
+    def visit_Function(self, node):
         # Avoid method definitions.
         if not self.in_class:
             self.assnames.append((node.name, node.lineno))
@@ -131,17 +131,17 @@ class AllVisitor(Visitor):
         self.in_assign = False
         self.in_all = False
 
-    def visitAssign(self, node):
+    def visit_Assign(self, node):
         prev, self.in_assign = self.in_assign, True
         self.continue_(node)
         self.in_assign = prev
 
-    def visitAssName(self, node):
-        if self.in_assign and node.name == '__all__':
+    def visit_Name(self, node):
+        if self.in_assign and node.id == '__all__':
             self.in_all = True
         self.continue_(node)
 
-    def visitConst(self, node):
+    def visit_Constant(self, node):
         if self.in_assign and self.in_all:
             self.all.append((node.value, node.lineno))
         self.continue_(node)
