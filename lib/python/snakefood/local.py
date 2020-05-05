@@ -3,10 +3,18 @@
 This code provides searches for local symbols in the AST, assignments and such
 things.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # This file is part of the Snakefood open source package.
 # See http://furius.ca/snakefood/ for licensing details.
 
 # stdlib imports
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
 import compiler
 
 __all__ = ('get_names_from_ast', 'filter_unused_imports',
@@ -72,7 +80,7 @@ class NamesVisitor(Visitor):
         self.attributes.append(node.name)
         self.attributes.reverse()
         attribs = self.attributes
-        for i in xrange(1, len(attribs)+1):
+        for i in range(1, len(attribs)+1):
             self.dotted.append(('.'.join(attribs[0:i]), node.lineno))
         self.simple.append((attribs[0], node.lineno))
         self.attributes = []

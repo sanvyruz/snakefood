@@ -1,9 +1,17 @@
 """
 Various utilities, to iterate among files, global stuff, etc.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # This file is part of the Snakefood open source package.
 # See http://furius.ca/snakefood/ for licensing details.
 
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
+from builtins import filter
 import os, logging, re
 from os.path import *
 

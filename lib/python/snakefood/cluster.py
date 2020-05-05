@@ -4,11 +4,19 @@ Read snakefood dependencies from stdin and cluster according to filenames.
 You need to call this script with the names of directories to cluster together,
 for relative filenames.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # This file is part of the Snakefood open source package.
 # See http://furius.ca/snakefood/ for licensing details.
 
+from builtins import map
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
 import sys
-from itertools import imap
+
 
 from snakefood.fallback.collections import defaultdict
 from snakefood.depends import read_depends, output_depends
@@ -30,7 +38,7 @@ def read_clusters(fn):
     "Return a list of cluster prefixes read from the file 'fn'."
     f = open(fn, 'rU')
     clusters = []
-    for x in imap(str.strip, f.xreadlines()):
+    for x in map(str.strip, f):
         if not x:
             continue
         clusters.append(x)

@@ -5,9 +5,17 @@ The imported modules/symbols are output even if they cannot be found.  (You
 could try to do this with grep, but this is more accurate because it uses the
 AST to obtain the list of imports.)
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # This file is part of the Snakefood open source package.
 # See http://furius.ca/snakefood/ for licensing details.
 
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
 import logging
 from os.path import *
 
@@ -60,7 +68,7 @@ def list_imports():
                                                          opts.ignores):
                 print_('%s:%d: %s' % (fn, lineno, symname))
                 if opts.verbose:
-                    for no in xrange(lineno-1, len(lines)):
+                    for no in range(lineno-1, len(lines)):
                         l = lines[no].rstrip()
                         print_('   %s' % l)
                         if l[-1] != '\\':

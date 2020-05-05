@@ -1,33 +1,39 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
 ## try:
 ##     from imp import get_loader
 ## except ImportError:
 ##     from pkgutil import get_loader
 
+from future import standard_library
+standard_library.install_aliases()
 from imp import find_module
 from pkgutil import ImpImporter
 from os.path import *
 
 def find_mod(modname, fn):
 
-    print '\n\n\n-----', modname, fn
+    print('\n\n\n-----', modname, fn)
 
     mod = ImpImporter().find_module(modname)
-    print 'global', mod, mod and mod.get_filename()
+    print('global', mod, mod and mod.get_filename())
 
     mod = ImpImporter(dirname(fn)).find_module(modname)
-    print 'local', mod, mod and mod.get_filename()
+    print('local', mod, mod and mod.get_filename())
 
     try:
         mod = find_module(modname)
     except ImportError:
         mod = 'ERROR'
-    print 'imp global', mod
+    print('imp global', mod)
 
     try:
         mod = find_module(modname, dirname(fn))
     except ImportError:
         mod = 'ERROR'
-    print 'imp local', mod
+    print('imp local', mod)
 
 
 

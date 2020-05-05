@@ -13,9 +13,16 @@ As a special case, if the 'to' tuple is (None, None), this means to at least
 include the 'from' tuple as a node.  This may happen if the file has no
 dependencies on anything.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # This file is part of the Snakefood open source package.
 # See http://furius.ca/snakefood/ for licensing details.
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
 import sys, logging
 from os.path import *
 from operator import itemgetter
@@ -189,7 +196,7 @@ def gendeps():
     # the same roots.
     if opts.internal >= 2:
         filtfiles = type(allfiles)()
-        for from_, tolist in allfiles.iteritems():
+        for from_, tolist in allfiles.items():
             filtfiles[from_] = set(x for x in tolist if x in allfiles or x == (None, None))
         allfiles = filtfiles
 
@@ -219,9 +226,9 @@ def gendeps():
     info("Found roots:")
 
     found_roots = set()
-    for key, files in allfiles.iteritems():
+    for key, files in allfiles.items():
         found_roots.add(key[0])
-        found_roots.update(map(itemgetter(0),files))
+        found_roots.update(list(map(itemgetter(0),files)))
     if None in found_roots:
         found_roots.remove(None)
     for root in sorted(found_roots):

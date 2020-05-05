@@ -2,9 +2,19 @@
 Parsing and finding routines.
 This could be considered the core of snakefood, and where all the complexity lives.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # This file is part of the Snakefood open source package.
 # See http://furius.ca/snakefood/ for licensing details.
 
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from builtins import object
 import sys, os, logging
 import compiler
 from compiler.visitor import ASTVisitor
@@ -264,19 +274,19 @@ def parse_python_source(fn):
     try:
         contents = open(fn, 'rU').read()
         lines = contents.splitlines()
-    except (IOError, OSError), e:
+    except (IOError, OSError) as e:
         logging.error("Could not read file '%s'." % fn)
         return None, None
 
     # Convert the file to an AST.
     try:
         ast = compiler.parse(contents)
-    except SyntaxError, e:
+    except SyntaxError as e:
         err = '%s:%s: %s' % (fn, e.lineno or '--', e.msg)
         logging.error("Error processing file '%s':\n%s" %
                       (fn, err))
         return None, lines
-    except TypeError, e:
+    except TypeError as e:
         # Note: this branch untested, applied from a user-submitted patch.
         err = '%s: %s' % (fn, str(e))
         logging.error("Error processing file '%s':\n%s" %

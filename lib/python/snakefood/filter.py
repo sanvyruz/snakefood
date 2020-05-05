@@ -1,7 +1,14 @@
 """
 A helper module to build simple filter scripts.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
 from six import print_
 
 import sys
@@ -21,9 +28,9 @@ def do_filter(populate_parser=None):
         else:
             f = open(fn)
 
-        for line in f.xreadlines():
+        for line in f:
             try:
                 yield eval(line)
-            except Exception, e:
+            except Exception as e:
                 print_(e, sys.stderr)
                 raise SystemExit

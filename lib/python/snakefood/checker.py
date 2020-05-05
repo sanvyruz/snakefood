@@ -10,11 +10,17 @@ import the module in order to run the checks. This is a major advantage over all
 the other lint/checker programs, and the main reason for taking the time to
 write it.
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # This file is part of the Snakefood open source package.
 # See http://furius.ca/snakefood/ for licensing details.
 
 # stdlib imports
-import sys, __builtin__, re
+from future import standard_library
+standard_library.install_aliases()
+import sys, builtins, re
 from os.path import *
 import compiler
 
@@ -97,7 +103,7 @@ def main():
             defined.update(x[0] for x in assign_names)
             _, simple_names = get_names_from_ast(ast)
             for name, lineno in simple_names:
-                if name not in defined and name not in __builtin__.__dict__:
+                if name not in defined and name not in builtins.__dict__:
                     write("%s:%d:  Missing import for '%s'\n" % (fn, lineno, name))
 
         # Print out all the schmoo for debugging.

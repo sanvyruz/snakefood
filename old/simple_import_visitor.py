@@ -1,3 +1,9 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
 class SimpleImportVisitor(Visitor):
     """AST visitor that accumulates only the target names of import statements.
     This was originally used in sfood-checker."""

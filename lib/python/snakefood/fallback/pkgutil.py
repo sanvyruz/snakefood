@@ -1,8 +1,18 @@
 """Utilities to support packages."""
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
 # NOTE: This module must remain compatible with Python 2.3, as it is shared
 # by setuptools for distribution with Python 2.3 and up.
 
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from past.builtins import basestring
+from builtins import object
 import os
 import sys
 import imp
@@ -140,7 +150,7 @@ def iter_modules(path=None, prefix=''):
     if path is None:
         importers = iter_importers()
     else:
-        importers = map(get_importer, path)
+        importers = list(map(get_importer, path))
 
     yielded = {}
     for i in importers:
@@ -159,7 +169,7 @@ def iter_importer_modules(importer, prefix=''):
 iter_importer_modules = simplegeneric(iter_importer_modules)
 
 
-class ImpImporter:
+class ImpImporter(object):
     """PEP 302 Importer that wraps Python's "classic" import algorithm
 
     ImpImporter(dirname) produces a PEP 302 importer that searches that
@@ -221,7 +231,7 @@ class ImpImporter:
                 yield prefix + modname, ispkg
 
 
-class ImpLoader:
+class ImpLoader(object):
     """PEP 302 Loader that wraps Python's "classic" import algorithm
     """
     code = source = None
@@ -321,7 +331,7 @@ try:
     from zipimport import zipimporter
 
     def iter_zipimport_modules(importer, prefix=''):
-        dirlist = zipimport._zip_directory_cache[importer.archive].keys()
+        dirlist = list(zipimport._zip_directory_cache[importer.archive].keys())
         dirlist.sort()
         _prefix = importer.prefix
         plen = len(_prefix)
@@ -532,7 +542,7 @@ def extend_path(path, name):
         if os.path.isfile(pkgfile):
             try:
                 f = open(pkgfile)
-            except IOError, msg:
+            except IOError as msg:
                 sys.stderr.write("Can't open %s: %s\n" %
                                  (pkgfile, msg))
             else:

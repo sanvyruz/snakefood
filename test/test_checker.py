@@ -1,7 +1,13 @@
 """
 Functional test for Python checker.
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
 
+from future import standard_library
+standard_library.install_aliases()
 import os
 from testsupport import *
 
@@ -52,7 +58,7 @@ def test_checker_expected():
                  os.listdir(checkdir) if fn.endswith('.py')]
 
     for fn in pytocheck:
-        print 'Testing checker on: %s' % fn
+        print('Testing checker on: %s' % fn)
         compare_expect(None, fn.replace('.py', '.expect'),
                        'sfood-checker', fn, filterdir=(data, 'ROOT'))
 
