@@ -1,4 +1,4 @@
-(('ROOT/double', 'double.py'), (None, None))
 (('ROOT/double', 'double.py'), ('ROOT/double', 'a/b/c1.py'))
 (('ROOT/double', 'double.py'), ('ROOT/double', 'a/b/c2.py'))
 (('ROOT/double', 'double.py'), ('ROOT/double', 'a/b/c3.py'))
+(('ROOT/double', 'double.py'), (None, None))
