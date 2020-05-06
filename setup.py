@@ -62,5 +62,6 @@ from the dependency list.
       download_url="http://bitbucket.org/blais/snakefood",
       package_dir = {'': 'lib/python'},
       packages = ['snakefood', 'snakefood/fallback'],
+      install_requires=['future>=0.17.1'],
       scripts=scripts
      )
